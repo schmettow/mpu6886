@@ -58,9 +58,8 @@ use crate::error::*;
 
 use libm::{powf, atan2f, sqrtf};
 use nalgebra::{Vector3, Vector2};
-use embedded_hal::{
-    delay::DelayNs,
-    i2c::I2c};
+pub use embedded_hal::{ delay::DelayNs,
+                        i2c::I2c};
 
 //use esp_println::println;
 /// PI, f32
