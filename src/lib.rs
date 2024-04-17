@@ -59,9 +59,9 @@ use crate::error::*;
 use libm::{powf, atan2f, sqrtf};
 use nalgebra::{Vector3, Vector2};
 use embedded_hal::{
-    blocking::delay::DelayMs,
-    blocking::i2c::{Write, WriteRead},
-};
+    delay::DelayNs,
+    i2c::I2c};
+
 //use esp_println::println;
 /// PI, f32
 pub const PI: f32 = core::f32::consts::PI;
@@ -90,7 +90,7 @@ pub struct Mpu6886<I> {
 
 impl<I, E> Mpu6886<I>
 where
-    I: Write<Error = E> + WriteRead<Error = E>, 
+    I: I2c<Error = E>, 
 {
     /// Side effect free constructor with default sensitivies, no calibration
     pub fn new(i2c: I) -> Self {
@@ -133,11 +133,11 @@ where
     }
 
     /// Wakes mpu6886 with all sensors enabled (default)
-    fn wake<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Mpu6886Error<E>> {
+    fn wake(&mut self, delay: &mut impl DelayNs) -> Result<(), Mpu6886Error<E>> {
         // mpu6886 has sleep enabled by default -> set bit 0 to wake
         // Set clock source to be PLL with x-axis gyroscope reference, bits 2:0 = 001 (See Register Map )
         self.write_byte(PWR_MGMT_1::ADDR, 0x01)?;
-        delay.delay_ms(100u8);
+        delay.delay_ms(100);
         Ok(())
     }
 
@@ -161,7 +161,7 @@ where
     }
 
     /// Init wakes mpu6886 and verifies register addr, e.g. in i2c
-    pub fn init<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Mpu6886Error<E>> {
+    pub fn init<D: DelayNs>(&mut self, delay: &mut D) -> Result<(), Mpu6886Error<E>> {
         self.wake(delay)?;
         self.verify()?;
         self.set_accel_range(AccelRange::G2)?;
@@ -242,9 +242,9 @@ where
     }
 
     /// reset device
-    pub fn reset_device<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Mpu6886Error<E>> {
+    pub fn reset_device<D: DelayNs>(&mut self, delay: &mut D) -> Result<(), Mpu6886Error<E>> {
         self.write_bit(PWR_MGMT_1::ADDR, PWR_MGMT_1::DEVICE_RESET, true)?;
-        delay.delay_ms(100u8);
+        delay.delay_ms(100);
         // Note: Reset sets sleep to true! Section register map: resets PWR_MGMT to 0x40
         Ok(())
     }
@@ -341,9 +341,9 @@ where
         Ok(bw)
     }
 
-    pub fn set_gyro_bw(&mut self, bw: GyroBw) -> Result<(), Mpu6886Error<E>> {
+    pub fn set_gyro_bw(&mut self, _bw: GyroBw) -> Result<(), Mpu6886Error<E>> {
         // TODO: modify register if DEC2_CFG needs to be set elsewhere
-        //self.write_byte(ACCEL_CONFIG_2::ADDR, bw.bits())?;
+        //self.write_byte(ACCEL_CONFIG2::ADDR, bw.bits())?;
         
         Ok(())
     }
