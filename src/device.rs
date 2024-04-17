@@ -174,6 +174,7 @@ impl ACCEL_CONFIG {
     pub const FS_SEL: BitBlock = BitBlock { bit: 4, length: 2};
 }
 
+#[allow(non_camel_case_types)]
 pub struct ACCEL_CONFIG_2;
 impl ACCEL_CONFIG_2 {
     /// Base Address
